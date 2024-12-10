@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -17,18 +18,24 @@ public class QueryRepository {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    
+    private static final String OUTPUT_FOLDER = "query-results";
 
     public String executeQuery(String queryId, String query) {
         // Determine the type of query: SELECT or DML/DDL
         String queryType = query.trim().split("\\s+")[0].toUpperCase();
         try {
+        	
+        	createOutputFolder();
+        	
             if (queryType.equals("SELECT")) {
                 // Execute SELECT query
                 jdbcTemplate.query(query, new ResultSetExtractor<Void>() {
                     @Override
                     public Void extractData(ResultSet rs) throws SQLException, DataAccessException {
                         try {
-                            writeResultSetToCSV(rs, "output_" + queryId + ".csv");
+                        	String filePath = OUTPUT_FOLDER + File.separator + "output_" + queryId + ".csv";
+                            writeResultSetToCSV(rs, filePath);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -67,4 +74,12 @@ public class QueryRepository {
             }
         }
     }
+    
+    private void createOutputFolder() {
+        File folder = new File(OUTPUT_FOLDER);
+        if (!folder.exists()) {
+            folder.mkdirs(); // Creates the folder and necessary parent directories
+        }
+    }
+    
 }
